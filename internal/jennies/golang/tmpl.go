@@ -13,7 +13,7 @@ import (
 //nolint:gochecknoglobals
 var templates *template.Template
 
-//go:embed templates/runtime/*.tmpl templates/builders/*.tmpl templates/builders/veneers/*.tmpl templates/types/*.tmpl
+//go:embed templates/runtime/*.tmpl templates/builders/*.tmpl templates/converters/*.tmpl templates/builders/veneers/*.tmpl templates/types/*.tmpl
 //nolint:gochecknoglobals
 var veneersFS embed.FS
 
@@ -43,6 +43,9 @@ func init() {
 			"resolvesToComposableSlot": func(_ ast.Type) bool {
 				panic("resolvesToComposableSlot() needs to be overridden by a jenny")
 			},
+			"formatRawRef": func(_ ast.Type) string {
+				panic("formatRawRef() needs to be overridden by a jenny")
+			},
 		}).
 		Funcs(map[string]any{
 			"formatPackageName": formatPackageName,
@@ -54,6 +57,20 @@ func init() {
 				}
 
 				return variableName
+			},
+			"maybeUnptr": func(variableName string, intoType ast.Type) string {
+				if !intoType.Nullable || intoType.IsArray() || intoType.IsMap() || intoType.IsComposableSlot() {
+					return variableName
+				}
+
+				return "cog.Unptr(" + variableName + ")"
+			},
+			"maybeDereference": func(typeDef ast.Type) string {
+				if typeDef.Nullable && !typeDef.IsAnyOf(ast.KindArray, ast.KindMap) {
+					return "*"
+				}
+
+				return ""
 			},
 			"isNullableNonArray": func(typeDef ast.Type) bool {
 				return typeDef.Nullable && !typeDef.IsArray()
