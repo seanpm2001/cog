@@ -42,7 +42,7 @@ func (jenny *Converter) Generate(context languages.Context) (codejen.Files, erro
 func (jenny *Converter) generateConverter(context languages.Context, builder ast.Builder) ([]byte, error) {
 	var buffer strings.Builder
 
-	converter := (&languages.ConverterGenerator{}).FromBuilder(context, builder)
+	converter := languages.NewConverterGenerator().FromBuilder(context, builder)
 
 	imports := NewImportMap()
 	typeImportMapper := func(pkg string) string {
